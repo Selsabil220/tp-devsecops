@@ -1,0 +1,46 @@
+name: CI/CD - democyber
+
+# Trigger the workflow on push or pull request to main
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/democyber:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Compile Java
+        run: mvn compile
+
+      - name: Build Java project with Maven
+        run: mvn clean package
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t $DOCKER_IMAGE_NAME .
+
+      - name: Test Docker image locally
+        run: |
+          docker run -d -p 8080:8080 --name test-app $DOCKER_IMAGE_NAME
+          sleep 15
+          curl -f http://localhost:8080/
+          docker stop test-app
