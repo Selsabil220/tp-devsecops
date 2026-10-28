@@ -21,6 +21,7 @@ jobs:
       - name: Run Gitleaks scan
         uses: gitleaks/gitleaks-action@v2
 
+#upload the gitleaks report
 
       - name: Upload Gitleaks report
         if: always()
