@@ -61,11 +61,20 @@ jobs:
           docker stop test-app
           docker rm test-app
 
-      #Tivy scan
+    # Trivy scan
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.DOCKER_IMAGE_NAME }}
-          format: 'table'
+          format: 'json'
+          output: 'trivy-report.json'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
+
+    # Upload Trivy report
+      - name: Upload Trivy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.json
