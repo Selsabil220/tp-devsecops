@@ -60,8 +60,26 @@ jobs:
       - name: Test Docker image locally
         run: |
           docker run -d --name democyber-test -p 8080:8080 $DOCKER_IMAGE_NAME
-          curl -f --retry 10 --retry-delay 3 --retry-connrefused http://localhost:8080 \
-            || (docker logs democyber-test && exit 1)
+          
+          echo "Waiting for application to start..."
+          # Loop up to 20 times, waiting 3 seconds each time (60s total)
+          for i in {1..20}; do
+            # -s silences progress, -f fails on HTTP errors, > /dev/null hides output
+            if curl -s -f http://127.0.0.1:8080 > /dev/null; then
+              echo "✅ Application is up and running!"
+              break
+            fi
+            echo "Attempt $i failed, retrying in 3s..."
+            sleep 3
+          done
+
+          # Final check - if it failed after 60 seconds, print logs and fail the job
+          if ! curl -s -f http://127.0.0.1:8080 > /dev/null; then
+            echo "❌ Final health check failed. Printing container logs:"
+            docker logs democyber-test
+            exit 1
+          fi
+          
           docker stop democyber-test
           docker rm democyber-test
 
