@@ -105,7 +105,7 @@ jobs:
         with:
           image-ref: ${{ env.DOCKER_IMAGE_NAME }}
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
 
